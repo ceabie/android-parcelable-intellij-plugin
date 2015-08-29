@@ -14,6 +14,8 @@ import java.util.List;
  * @author Dallas Gutauckis [dallas@gutauckis.com]
  */
 final public class PsiUtils {
+    public static final String CREATOR_NAME = "CREATOR";
+
     private PsiUtils() {
     }
 
@@ -59,5 +61,12 @@ final public class PsiUtils {
         }
 
         return type.getCanonicalText();
+    }
+
+    public static PsiClass getClass(PsiType psiType) {
+        if (psiType instanceof PsiClassType) {
+            return ((PsiClassType) psiType).resolve();
+        }
+        return null;
     }
 }

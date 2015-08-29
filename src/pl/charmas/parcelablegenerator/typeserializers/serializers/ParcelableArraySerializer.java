@@ -11,6 +11,7 @@ public class ParcelableArraySerializer implements TypeSerializer {
 
     @Override
     public String readValue(PsiField field, String parcel) {
-        return "this." + field.getName() + " = (" + field.getType().getCanonicalText() + ")" + parcel + ".readParcelableArray(" + field.getType().getDeepComponentType().getCanonicalText() + ".class.getClassLoader());";
+        return "this." + field.getName() + " = (" + field.getType().getCanonicalText() + ")" + parcel
+                + ".readParcelableArray(" + field.getType().getDeepComponentType().getCanonicalText() + ".class.getClassLoader());";
     }
 }

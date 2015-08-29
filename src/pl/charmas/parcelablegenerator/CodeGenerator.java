@@ -17,7 +17,6 @@ package pl.charmas.parcelablegenerator;
 
 import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
-import com.intellij.psi.util.PsiUtil;
 import pl.charmas.parcelablegenerator.typeserializers.*;
 import pl.charmas.parcelablegenerator.util.PsiUtils;
 
@@ -28,7 +27,6 @@ import java.util.List;
  * Quite a few changes here by Dallas Gutauckis [dallas@gutauckis.com]
  */
 public class CodeGenerator {
-    public static final String CREATOR_NAME = "CREATOR";
     public static final String TYPE_PARCEL = "android.os.Parcel";
 
     private final PsiClass mClass;
@@ -195,7 +193,7 @@ public class CodeGenerator {
 
         // Look for an existing CREATOR and remove it
         for (PsiField field : allFields) {
-            if (field.getName().equals(CREATOR_NAME)) {
+            if (field.getName().equals(PsiUtils.CREATOR_NAME)) {
                 // Creator already exists, need to remove/replace it
                 field.delete();
             }

@@ -38,6 +38,9 @@
     <depends>com.intellij.modules.lang</depends>
     -->
 
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Add your extensions here -->
+  </extensions>
     <application-components>
         <!-- Add your application components here -->
     </application-components>
@@ -55,7 +58,4 @@
         </action>
     </actions>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
-    </extensions>
 </idea-plugin>
