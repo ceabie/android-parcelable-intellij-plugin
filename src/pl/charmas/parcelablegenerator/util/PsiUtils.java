@@ -14,7 +14,6 @@ import java.util.List;
  * @author Dallas Gutauckis [dallas@gutauckis.com]
  */
 final public class PsiUtils {
-    public static final String CREATOR_NAME = "CREATOR";
 
     private PsiUtils() {
     }

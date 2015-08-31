@@ -28,9 +28,16 @@ import java.util.List;
  */
 public class CodeGenerator {
     public static final String TYPE_PARCEL = "android.os.Parcel";
+    public static final String CREATOR_NAME = "CREATOR";
+
+    private static class FiledSerializer {
+        public PsiField filed;
+        public TypeSerializer serializer;
+    }
 
     private final PsiClass mClass;
     private final List<PsiField> mFields;
+
     private final TypeSerializerFactory mTypeSerializerFactory;
 
     public CodeGenerator(PsiClass psiClass, List<PsiField> fields) {
@@ -63,7 +70,7 @@ public class CodeGenerator {
         return sb.toString();
     }
 
-    private String generateConstructor(List<PsiField> fields, PsiClass psiClass) {
+    private String generateConstructor(FiledSerializer[] filedSerializers, PsiClass psiClass) {
         String className = psiClass.getName();
 
         StringBuilder sb = new StringBuilder("protected ");
@@ -76,8 +83,8 @@ public class CodeGenerator {
         }
 
         // Creates all of the deserialization methods for the given fields
-        for (PsiField field : fields) {
-            sb.append(getSerializerForType(field).readValue(field, "in"));
+        for (FiledSerializer field : filedSerializers) {
+            sb.append(field.serializer.readValue(field.filed, "in"));
         }
 
         sb.append("}");
@@ -96,18 +103,33 @@ public class CodeGenerator {
         return false;
     }
 
-    private String generateWriteToParcel(List<PsiField> fields) {
+    private String generateWriteToParcel(FiledSerializer[] filedSerializers) {
         StringBuilder sb = new StringBuilder("@Override public void writeToParcel(android.os.Parcel dest, int flags) {");
         if (hasParcelableSuperclass() && hasSuperMethod("writeToParcel")) {
             sb.append("super.writeToParcel(dest, flags);");
         }
-        for (PsiField field : fields) {
-            sb.append(getSerializerForType(field).writeValue(field, "dest", "flags"));
+
+        for (FiledSerializer field : filedSerializers) {
+            sb.append(field.serializer.writeValue(field.filed, "dest", "flags"));
         }
 
         sb.append("}");
 
         return sb.toString();
+    }
+
+    private FiledSerializer [] getFiledSerializers(List<PsiField> fields) {
+        FiledSerializer [] serializers = new FiledSerializer[fields.size()];
+
+        int i = 0;
+        for (PsiField field : fields) {
+            serializers[i] = new FiledSerializer();
+            serializers[i].serializer = getSerializerForType(field);
+            serializers[i].filed = field;
+            i++;
+        }
+
+        return serializers;
     }
 
     private boolean hasSuperMethod(String methodName) {
@@ -138,10 +160,13 @@ public class CodeGenerator {
 
         removeExistingParcelableImplementation(mClass);
 
+        FiledSerializer[] filedSerializers = getFiledSerializers(mFields);
+
         // Describe contents method
         PsiMethod describeContentsMethod = elementFactory.createMethodFromText(generateDescribeContents(), mClass);
+
         // Method for writing to the parcel
-        PsiMethod writeToParcelMethod = elementFactory.createMethodFromText(generateWriteToParcel(mFields), mClass);
+        PsiMethod writeToParcelMethod = elementFactory.createMethodFromText(generateWriteToParcel(filedSerializers), mClass);
 
         // Default constructor if needed
         String defaultConstructorString = generateDefaultConstructor(mClass);
@@ -152,7 +177,8 @@ public class CodeGenerator {
         }
 
         // Constructor
-        PsiMethod constructor = elementFactory.createMethodFromText(generateConstructor(mFields, mClass), mClass);
+        PsiMethod constructor = elementFactory.createMethodFromText(generateConstructor(filedSerializers, mClass), mClass);
+
         // CREATOR
         PsiField creatorField = elementFactory.createFieldFromText(generateStaticCreator(mClass), mClass);
 
@@ -193,7 +219,7 @@ public class CodeGenerator {
 
         // Look for an existing CREATOR and remove it
         for (PsiField field : allFields) {
-            if (field.getName().equals(PsiUtils.CREATOR_NAME)) {
+            if (CREATOR_NAME.equals(field.getName())) {
                 // Creator already exists, need to remove/replace it
                 field.delete();
             }
